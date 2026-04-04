@@ -1,65 +1,215 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
+import React from 'react'
+import Link from 'next/link'
+import { Calendar, MapPin, Users } from 'lucide-react'
+import { events } from '@/lib/events'
+import { categories } from '@/lib/categories'
+import { EventCard } from '@/components/eventcard'
+import { CategoryCard } from '@/components/categorycard'
+import { RecommendationSection } from '@/components/recommendation'
+import { PixelBorder } from '@/components/pixelborder'
+
+export default function HomePage() {
+  const featuredEvents = events.filter((e) => e.isFeatured).slice(0, 3)
+  const upcomingEvents = [...events]
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 6)
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-cream pb-16">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-b from-sky to-cream pt-20 pb-16 px-4 border-b-4 border-dark-brown overflow-hidden">
+        {/* Decorative Elements */}
+        <div
+          className="absolute top-10 left-10 text-4xl opacity-50 animate-bounce"
+          style={{
+            animationDuration: '3s',
+          }}
+        >
+          ☁️
+        </div>
+        <div
+          className="absolute top-20 right-20 text-4xl opacity-50 animate-bounce"
+          style={{
+            animationDuration: '4s',
+          }}
+        >
+          ☁️
+        </div>
+        <div className="absolute bottom-10 left-1/4 text-2xl">🌿</div>
+        <div className="absolute bottom-5 right-1/4 text-2xl">🍄</div>
+
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <h1 className="font-pixel text-3xl md:text-5xl text-dark-brown mb-6 leading-tight">
+            Discover Local <br />{' '}
+            <span className="text-green text-shadow-pixel">Magic</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg md:text-xl text-brown mb-10 max-w-2xl mx-auto font-medium">
+            Find festivals, markets, and gatherings in your community. Your next
+            adventure awaits near you.
           </p>
+
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              href="/events"
+              className="bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs pixel-border-sm transition-colors inline-block"
+            >
+              Explore Events
+            </Link>
+            <Link
+              href="/calendar"
+              className="bg-brown hover:bg-dark-brown text-cream px-8 py-4 font-pixel text-xs pixel-border-sm transition-colors inline-block"
+            >
+              View Calendar
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </div>
+
+      {/* Stats Bar */}
+      <div className="max-w-5xl mx-auto px-4 -mt-8 relative z-20 mb-16">
+        <PixelBorder className="bg-parchment p-6 flex flex-col md:flex-row justify-around items-center gap-6">
+          <div className="text-center">
+            <div className="font-pixel text-xl text-gold text-shadow-pixel mb-2">
+              {events.length}+
+            </div>
+            <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
+              Active Events
+            </div>
+          </div>
+          <div className="hidden md:block w-1 h-12 bg-brown/30"></div>
+          <div className="text-center">
+            <div className="font-pixel text-xl text-gold text-shadow-pixel mb-2">
+              # of provinces
+            </div>
+            <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
+              Towns
+            </div>
+          </div>
+          <div className="hidden md:block w-1 h-12 bg-brown/30"></div>
+          <div className="text-center">
+            <div className="font-pixel text-xl text-gold text-shadow-pixel mb-2">
+              # of people
+            </div>
+            <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
+              Players
+            </div>
+          </div>
+        </PixelBorder>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
+        {/* Categories Section */}
+        <section>
+          <h2 className="font-pixel text-xl text-dark-brown mb-8 text-center">
+            Browse by Category
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {categories.map((category) => {
+              const count = events.filter(
+                (e) => e.categoryId === category.id,
+              ).length
+              return (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  eventCount={count}
+                />
+              )
+            })}
+          </div>
+        </section>
+
+        {/* Featured Events */}
+        <section>
+          <div className="flex justify-between items-end mb-8">
+            <h2 className="font-pixel text-xl text-dark-brown">
+              Notice Board Highlights
+            </h2>
+            <Link
+              href="/events"
+              className="text-green hover:text-dark-green font-bold text-sm underline decoration-2 underline-offset-4"
+            >
+              View All
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {featuredEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        </section>
+
+        {/* Recommendations */}
+        <RecommendationSection events={events} />
+
+        {/* Upcoming Events List */}
+        <section>
+          <h2 className="font-pixel text-xl text-dark-brown mb-8">
+            Upcoming Gatherings
+          </h2>
+          <div className="space-y-4">
+            {upcomingEvents.map((event) => {
+              const dateObj = new Date(event.date)
+              const category = categories.find((c) => c.id === event.categoryId)
+              return (
+                <Link
+                  key={event.id}
+                  href={`/events/${event.id}`}
+                  className="block"
+                >
+                  <PixelBorder
+                    interactive
+                    className="p-4 flex flex-col md:flex-row gap-4 items-center bg-white hover:bg-cream"
+                  >
+                    <div className="flex-shrink-0 w-full md:w-32 h-32 md:h-24">
+                      <img
+                        src={event.image}
+                        alt={event.title}
+                        className="w-full h-full object-cover border-2 border-brown"
+                      />
+                    </div>
+
+                    <div className="flex-grow min-w-0 text-center md:text-left">
+                      <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                        <span
+                          className={`text-[10px] font-pixel px-2 py-1 text-white ${category?.color || 'bg-brown'}`}
+                        >
+                          {category?.name}
+                        </span>
+                        {event.price === 0 && (
+                          <span className="text-[10px] font-pixel px-2 py-1 bg-green text-white">
+                            FREE
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-pixel text-sm textdark-brown mb-2 truncate">
+                        {event.title}
+                      </h3>
+                      <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-brown">
+                        <span className="flex items-center">
+                          <Calendar size={14} className="mr-1" />{' '}
+                          {dateObj.toLocaleDateString()}
+                        </span>
+                        <span className="flex items-center">
+                          <MapPin size={14} className="mr-1" /> {event.city}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex-shrink-0">
+                      <button className="bg-brown hover:bg-dark-brown text-cream px-4 py-2 font-pixel text-[10px] pixel-border-sm transition-colors w-full md:w-auto">
+                        Details
+                      </button>
+                    </div>
+                  </PixelBorder>
+                </Link>
+              )
+            })}
+          </div>
+        </section>
+      </div>
     </div>
-  );
+  )
 }

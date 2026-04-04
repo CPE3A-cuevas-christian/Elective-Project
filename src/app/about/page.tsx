@@ -1,0 +1,148 @@
+"use client";
+import { PixelBorder } from "@/components/pixelborder";
+
+const team = [
+  {
+    id: "1",
+    name: "Belen",
+    role: "role",
+    avatar: "https://placehold.co/150x150/4a7c23/FFF8DC?text=M",
+    bio: "bio",
+    github: "#",
+  },
+  {
+    id: "2",
+    name: "Cuevas",
+    role: "role",
+    avatar: "https://placehold.co/150x150/8B6914/FFF8DC?text=J",
+    bio: "bio",
+    github: "#",
+  },
+  {
+    id: "3",
+    name: "Enriquez",
+    role: "role",
+    avatar: "https://placehold.co/150x150/2d5016/FFF8DC?text=A",
+    bio: "bio",
+    github: "#",
+  },
+  {
+    id: "4",
+    name: "Deguzman",
+    role: "role",
+    avatar: "https://placehold.co/150x150/5c3d0e/FFF8DC?text=C",
+    bio: "bio",
+    github: "#",
+  },
+  {
+    id: "5",
+    name: "Ongleo",
+    role: "role",
+    avatar: "https://placehold.co/150x150/5c3d0e/FFF8DC?text=C",
+    bio: "bio",
+    github: "#",
+  },
+];
+
+export default function AboutPage() {
+  return (
+    <div className="min-h-screen bg-cream py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto">
+
+        {/* Hero */}
+        <div className="text-center mb-16">
+          <h1 className="font-pixel text-3xl md:text-4xl text-dark-brown mb-4">
+            Meet the Builders
+          </h1>
+          <p className="text-lg text-brown max-w-2xl mx-auto font-medium">
+            We are a team of BS Computer Engineering students from Bulacan State
+            University, passionate about connecting our local community through technology.
+          </p>
+        </div>
+
+        {/* Mission */}
+        <PixelBorder className="bg-white p-8 mb-12">
+          <h2 className="font-pixel text-lg text-dark-brown mb-3">Our Mission</h2>
+          <p className="text-brown leading-relaxed">
+            Mission.
+          </p>
+        </PixelBorder>
+
+        {/* Team Grid */}
+        <h2 className="font-pixel text-xl text-dark-brown text-center mb-8">
+          The Team
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-16">
+          {team.map((member) => (
+            <PixelBorder
+              key={member.id}
+              className="bg-parchment p-6 flex flex-col items-center text-center pixel-border-interactive"
+            >
+              <div className="w-20 h-20 mb-4 pixel-border-sm overflow-hidden bg-brown">
+                <img
+                  src={member.avatar}
+                  alt={member.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="font-pixel text-sm text-dark-brown mb-1">
+                {member.name}
+              </h3>
+              <div className="text-xs font-bold text-green uppercase tracking-wider mb-3">
+                {member.role}
+              </div>
+              <p className="text-sm text-brown mb-4 flex-grow">{member.bio}</p>
+              <div className="flex gap-3 mt-auto">
+                <a href={member.github} className="text-dark-brown hover:text-green font-bold text-sm">
+                  GitHub
+                </a>
+              </div>
+            </PixelBorder>
+          ))}
+        </div>
+
+        {/* Story + Tech Stack */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          <PixelBorder className="bg-white p-8">
+            <h2 className="font-pixel text-lg text-dark-brown mb-4">Our Story</h2>
+            <p className="text-brown mb-4 leading-relaxed">
+              1st paragraph.
+            </p>
+            <p className="text-brown leading-relaxed">
+              2nd paragraph.
+            </p>
+          </PixelBorder>
+
+          <PixelBorder className="bg-white p-8">
+            <h2 className="font-pixel text-lg text-gold mb-4">Tech Stack</h2>
+            <ul className="space-y-3 font-medium">
+              {[
+                "React & TypeScript",
+                "Next.js for framework",
+                "Tailwind CSS for styling",
+                
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2">
+                  <span className="text-green">▶</span> {item}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 pt-6 border-t-2 border-brown">
+              <p className="font-pixel text-[10px] text-light-brown leading-loose">
+                Class of 2026<br />Bulacan State University
+              </p>
+            </div>
+          </PixelBorder>
+        </div>
+
+        {/* Footer Banner */}
+        <div className="pixel-border bg-dark-brown text-cream p-8 text-center">
+          <p className="font-medium text-lg mb-1">BS Computer Engineering Students</p>
+          <p className="font-pixel text-xl text-gold text-shadow-pixel">Bulacan State University</p>
+          <p className="text-light-brown mt-1 text-sm">Elective Project · 2026</p>
+        </div>
+
+      </div>
+    </div>
+  );
+}
