@@ -1,18 +1,52 @@
-'use client'
+"use client"
 
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { PixelBorder } from '@/components/pixelborder'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { AuthContext } from '@/context/authcontext'
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Authentication disabled - form is for display only
+    // Will be handled by AuthContext
+  }
+
+  const { login, register } = useContext(AuthContext)
+  const router = useRouter()
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormError(null)
+    setSubmitting(true)
+    try {
+      if (isLogin) {
+        const res = await login(email, password)
+        if (res.ok) {
+          router.push('/')
+        } else {
+          setFormError(res.error || 'Invalid credentials')
+        }
+      } else {
+        const res = await register(name, email, password)
+        if (res.ok) {
+          router.push('/')
+        } else {
+          setFormError(res.error || 'Registration failed')
+        }
+      }
+    } catch (err) {
+      setFormError('Network error')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -62,7 +96,12 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={submit} className="space-y-4">
+            {formError && (
+              <div className="bg-red-100 border border-red-300 text-red-800 px-3 py-2 rounded font-pixel text-[11px]">
+                {formError}
+              </div>
+            )}
             {!isLogin && (
               <div>
                 <label className="block text-sm font-bold text-dark-brown mb-1">
@@ -127,9 +166,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-green hover:bg-dark-green text-cream py-4 font-pixel text-xs pixel-border-sm transition-colors mt-6"
+              disabled={submitting}
+              className={`w-full ${submitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-dark-green'} bg-green text-cream py-4 font-pixel text-xs pixel-border-sm transition-colors mt-6`}
             >
-              {isLogin ? 'Login' : 'Create Account'}
+              {submitting ? (isLogin ? 'Signing in…' : 'Creating…') : (isLogin ? 'Login' : 'Create Account')}
             </button>
           </form>
         </PixelBorder>
