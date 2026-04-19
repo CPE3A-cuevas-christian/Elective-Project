@@ -29,64 +29,122 @@ function EventsPageContent() {
       )
     }
 
-    const location =
-      city && city !== 'All Locations' ? city : 'Philippines'
+    // Filter by city
+    if (city && city !== 'All Locations') {
+      result = result.filter((e) => e.city === city)
+    }
 
-    const url =
-      `https://www.eventbriteapi.com/v3/events/search/` +
-      `?location.address=${encodeURIComponent(location)}` +
-      `&token=${token}`
+    // Filter by category
+    if (category && category !== 'all') {
+      result = result.filter((e) => e.categoryId === category)
+    }
 
-    const response = await fetch(url, {
-      method: 'GET',
+    // Sort
+    result.sort((a, b) => {
+      if (sort === 'date') {
+        return new Date(a.date).getTime() - new Date(b.date).getTime()
+      } else if (sort === 'popularity') {
+        return b.attendeesCount - a.attendeesCount
+      } else if (sort === 'price-low') {
+        return a.price - b.price
+      }
+      return 0
     })
 
-    const raw = await response.text()
-    console.log('Eventbrite raw response:', raw)
+    setFilteredEvents(result)
+  }, [query, city, category, sort])
 
-    let data: any = {}
+  return (
+    <div className="min-h-screen bg-cream py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="font-pixel text-2xl md:text-3xl text-dark-brown mb-6">
+            Find Events
+          </h1>
+          <SearchBar
+            initialQuery={query}
+            initialCity={city}
+            initialCategory={category}
+          />
+        </div>
 
-    try {
-      data = raw ? JSON.parse(raw) : {}
-    } catch {
-      return NextResponse.json(
-        {
-          error: {
-            message: 'Eventbrite did not return valid JSON',
-          },
-        },
-        { status: 500 }
-      )
-    }
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 bg-parchment p-4 border-2 border-brown">
+          <div className="text-dark-brown font-bold mb-4 sm:mb-0">
+            Found {filteredEvents.length} event
+            {filteredEvents.length !== 1 ? 's' : ''}
+          </div>
 
-    console.log('Eventbrite status:', response.status)
-    console.log('Eventbrite response:', data)
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="sort"
+              className="text-sm font-bold text-brown"
+            >
+              Sort by:
+            </label>
+            <select
+              id="sort"
+              value={sort}
+              onChange={(e) => {
+                const params = new URLSearchParams(searchParams)
+                params.set('sort', e.target.value)
+                window.history.pushState({}, '', `?${params.toString()}`)
+              }}
+              className="bg-white border-2 border-brown px-3 py-1 focus:outline-none focus:border-green text-sm"
+            >
+              <option value="date">Upcoming Date</option>
+              <option value="popularity">Most Popular</option>
+              <option value="price-low">Price: Low to High</option>
+            </select>
+          </div>
+        </div>
 
-    if (!response.ok) {
-      return NextResponse.json(
-        {
-          error: {
-            message:
-              data?.error_description ||
-              data?.error ||
-              'Failed to fetch Eventbrite events',
-          },
-        },
-        { status: response.status }
-      )
-    }
+        {/* Active Filters Display */}
+        {(query || city !== 'All Locations' || category !== 'all') && (
+          <div className="flex flex-wrap gap-2 mb-6">
+            {query && (
+              <span className="bg-light-brown text-white px-3 py-1 text-xs font-bold rounded-full">
+                "{query}"
+              </span>
+            )}
+            {city !== 'All Locations' && (
+              <span className="bg-sky text-dark-brown px-3 py-1 text-xs font-bold rounded-full">
+                📍 {city}
+              </span>
+            )}
+            {category !== 'all' && (
+              <span className="bg-green text-white px-3 py-1 text-xs font-bold rounded-full">
+                🏷️ {categories.find((c) => c.id === category)?.name}
+              </span>
+            )}
+          </div>
+        )}
 
-    return NextResponse.json(data)
-  } catch (error) {
-    console.error('Error fetching Eventbrite events:', error)
+        {filteredEvents.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredEvents.map((event) => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">🍂</div>
+            <h3 className="font-pixel text-xl text-dark-brown mb-2">
+              No events found
+            </h3>
+            <p className="text-brown">
+              Try adjusting your search filters or check back later.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
-    return NextResponse.json(
-      {
-        error: {
-          message: 'Internal server error',
-        },
-      },
-      { status: 500 }
-    )
-  }
+export default function EventsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-cream" />}>
+      <EventsPageContent />
+    </Suspense>
+  )
 }
