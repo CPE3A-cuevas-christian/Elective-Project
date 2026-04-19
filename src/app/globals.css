@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -13,7 +13,7 @@
   --color-sky: #87CEEB;
 
   --font-pixel: "Nunito", sans-serif;
-  --font-sans: "Nunito", system-ui, sans-serif;
+  --font-sans: "Poppins", system-ui, sans-serif;
 }
 
 body {
