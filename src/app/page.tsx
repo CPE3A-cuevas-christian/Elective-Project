@@ -40,6 +40,15 @@ export default function HomePage() {
         <div className="absolute bottom-10 left-1/4 text-2xl">🌿</div>
         <div className="absolute bottom-5 right-1/4 text-2xl">🍄</div>
 
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at top left, rgba(255,255,255,0.35) 0%, transparent 35%), radial-gradient(circle at bottom right, rgba(255,255,255,0.25) 0%, transparent 30%)',
+          }}
+        />
+        <div className="absolute inset-0 bg-white/10 pointer-events-none" />
+
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h1 className="font-pixel text-3xl md:text-5xl text-dark-brown mb-6 leading-tight">
             Discover Local <br />{' '}
@@ -53,23 +62,16 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="/events"
-              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs pixel-border-sm transition-colors"
+              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
             >
               Explore Events
             </Link>
 
             <Link
               href="/create_event"
-              className="w-48 flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs pixel-border-sm transition-colors"
+              className="w-48 flex items-center justify-center border-2 border-green text-green bg-transparent hover:bg-green/10 px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300"
             >
               Create Event
-            </Link>
-
-            <Link
-              href="/calendar"
-              className="w-48 flex items-center justify-center bg-brown hover:bg-dark-brown text-cream px-8 py-4 font-pixel text-xs pixel-border-sm transition-colors"
-            >
-              View Calendar
             </Link>
           </div>
         </div>
