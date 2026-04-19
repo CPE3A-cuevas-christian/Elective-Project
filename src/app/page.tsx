@@ -79,7 +79,7 @@ export default function HomePage() {
       <div className="max-w-5xl mx-auto px-4 -mt-8 relative z-20 mb-16">
         <PixelBorder className="bg-parchment p-6 flex flex-col md:flex-row justify-around items-center gap-6">
           <div className="text-center">
-            <div className="font-pixel text-xl text-gold text-shadow-pixel mb-2">
+            <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
               {events.length}+
             </div>
             <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
@@ -88,7 +88,7 @@ export default function HomePage() {
           </div>
           <div className="hidden md:block w-1 h-12 bg-brown/30"></div>
           <div className="text-center">
-            <div className="font-pixel text-xl text-gold text-shadow-pixel mb-2">
+            <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
               # of provinces
             </div>
             <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
@@ -97,7 +97,7 @@ export default function HomePage() {
           </div>
           <div className="hidden md:block w-1 h-12 bg-brown/30"></div>
           <div className="text-center">
-            <div className="font-pixel text-xl text-gold text-shadow-pixel mb-2">
+            <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
               # of people
             </div>
             <div className="text-sm text-dark-brown font-bold uppercase tracking-wider">
