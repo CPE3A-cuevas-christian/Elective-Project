@@ -8,8 +8,18 @@ import { categories } from '@/lib/categories'
 
 declare global {
   interface Window {
-    google: typeof google
+    google: any
   }
+}
+
+type PlaceSuggestion = {
+  place_id: string
+  description: string
+}
+
+type LatLngLiteral = {
+  lat: number
+  lng: number
 }
 
 const today = new Date().toISOString().split('T')[0]
@@ -19,20 +29,17 @@ const GOOGLE_MAPS_SCRIPT_ID = 'google-maps-places-script'
 export default function AddEventPage() {
   const router = useRouter()
 
-  const autocompleteServiceRef =
-    useRef<google.maps.places.AutocompleteService | null>(null)
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null)
+  const autocompleteServiceRef = useRef<any>(null)
+  const geocoderRef = useRef<any>(null)
   const mapRef = useRef<HTMLDivElement | null>(null)
-  const googleMapRef = useRef<google.maps.Map | null>(null)
-  const markerRef = useRef<google.maps.Marker | null>(null)
+  const googleMapRef = useRef<any>(null)
+  const markerRef = useRef<any>(null)
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
   const [location, setLocation] = useState('')
-  const [suggestions, setSuggestions] = useState<
-    google.maps.places.AutocompletePrediction[]
-  >([])
+  const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([])
   const [time, setTime] = useState('')
   const [date, setDate] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -40,8 +47,9 @@ export default function AddEventPage() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
   const [showMapModal, setShowMapModal] = useState(false)
-  const [selectedLatLng, setSelectedLatLng] =
-    useState<google.maps.LatLngLiteral | null>(null)
+  const [selectedLatLng, setSelectedLatLng] = useState<LatLngLiteral | null>(
+    null,
+  )
   const [mapAddress, setMapAddress] = useState('')
   const [mapLoadingAddress, setMapLoadingAddress] = useState(false)
 
@@ -98,7 +106,7 @@ export default function AddEventPage() {
   useEffect(() => {
     if (!showMapModal || !mapRef.current || !window.google?.maps) return
 
-    const defaultCenter = selectedLatLng || { lat: 14.5995, lng: 120.9842 } // Manila fallback
+    const defaultCenter = selectedLatLng || { lat: 14.5995, lng: 120.9842 }
 
     const map = new window.google.maps.Map(mapRef.current, {
       center: defaultCenter,
@@ -123,7 +131,7 @@ export default function AddEventPage() {
       reverseGeocode(defaultCenter)
     }
 
-    map.addListener('click', (e: google.maps.MapMouseEvent) => {
+    map.addListener('click', (e: any) => {
       if (!e.latLng) return
 
       const clicked = {
@@ -137,20 +145,23 @@ export default function AddEventPage() {
     })
   }, [showMapModal])
 
-  const reverseGeocode = (latLng: google.maps.LatLngLiteral) => {
+  const reverseGeocode = (latLng: LatLngLiteral) => {
     if (!geocoderRef.current) return
 
     setMapLoadingAddress(true)
 
-    geocoderRef.current.geocode({ location: latLng }, (results, status) => {
-      setMapLoadingAddress(false)
+    geocoderRef.current.geocode(
+      { location: latLng },
+      (results: any[] | null, status: string) => {
+        setMapLoadingAddress(false)
 
-      if (status === 'OK' && results && results.length > 0) {
-        setMapAddress(results[0].formatted_address)
-      } else {
-        setMapAddress(`${latLng.lat}, ${latLng.lng}`)
-      }
-    })
+        if (status === 'OK' && results && results.length > 0) {
+          setMapAddress(results[0].formatted_address)
+        } else {
+          setMapAddress(`${latLng.lat}, ${latLng.lng}`)
+        }
+      },
+    )
   }
 
   const handleLocationChange = (value: string) => {
@@ -166,7 +177,7 @@ export default function AddEventPage() {
         input: value,
         componentRestrictions: { country: 'ph' },
       },
-      (predictions) => {
+      (predictions: PlaceSuggestion[] | null) => {
         setSuggestions(predictions || [])
       },
     )
@@ -193,62 +204,65 @@ export default function AddEventPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setError('')
+    e.preventDefault()
+    setError('')
 
-  if (!name || !description || !category || !location || !time || !date) {
-    setError('Please fill in all fields.')
-    return
-  }
-
-  setSubmitting(true)
-    console.log('FRONTEND EVENT DATA:', {
-    name,
-    description,
-    category,
-    location,
-    date,
-    time,
-  })
-  try {
-    const res = await fetch('/api/events', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name,
-        description,
-        category,
-        location,
-        date,
-        time,
-      }),
-    })
-
-    const data = await res.json()
-
-    if (!res.ok) {
-      setError(data.error || 'Failed to create event.')
+    if (!name || !description || !category || !location || !time || !date) {
+      setError('Please fill in all fields.')
       return
     }
 
-    setShowSuccessPopup(true)
-    setName('')
-    setDescription('')
-    setCategory('')
-    setLocation('')
-    setSuggestions([])
-    setTime('')
-    setDate('')
-    setMapAddress('')
-    setSelectedLatLng(null)
-  } catch (err) {
-    setError('Network error. Please try again.')
-  } finally {
-    setSubmitting(false)
+    setSubmitting(true)
+
+    console.log('FRONTEND EVENT DATA:', {
+      name,
+      description,
+      category,
+      location,
+      date,
+      time,
+    })
+
+    try {
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          category,
+          location,
+          date,
+          time,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Failed to create event.')
+        return
+      }
+
+      setShowSuccessPopup(true)
+      setName('')
+      setDescription('')
+      setCategory('')
+      setLocation('')
+      setSuggestions([])
+      setTime('')
+      setDate('')
+      setMapAddress('')
+      setSelectedLatLng(null)
+    } catch (err) {
+      console.error('CREATE EVENT ERROR:', err)
+      setError('Network error. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
-}
 
   const handleSuccessClose = () => {
     setShowSuccessPopup(false)

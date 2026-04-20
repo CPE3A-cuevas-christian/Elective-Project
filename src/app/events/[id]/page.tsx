@@ -17,7 +17,7 @@ import { PixelBorder } from '@/components/pixelborder'
 
 declare global {
   interface Window {
-    google: typeof google
+    google: any
   }
 }
 
@@ -42,14 +42,22 @@ type AuthUser = {
   name?: string | null
 }
 
-function normalizeCategory(raw: string) {
+type CategoryMeta = {
+  id: string
+  name: string
+  color: string
+  icon?: string
+  emoji?: string
+}
+
+function normalizeCategory(raw: string): CategoryMeta | null {
   const value = raw.trim().toLowerCase()
 
   const byId = categories.find((c) => c.id.toLowerCase() === value)
-  if (byId) return byId
+  if (byId) return byId as CategoryMeta
 
   const byName = categories.find((c) => c.name.toLowerCase() === value)
-  if (byName) return byName
+  if (byName) return byName as CategoryMeta
 
   return null
 }
@@ -112,32 +120,35 @@ async function getPlacePhotoByAddress(address: string): Promise<string | null> {
     const container = document.createElement('div')
     const service = new window.google.maps.places.PlacesService(container)
 
-    const request: google.maps.places.TextSearchRequest = {
+    const request = {
       query: address,
     }
 
-    service.textSearch(request, (results, status) => {
-      if (
-        status === window.google.maps.places.PlacesServiceStatus.OK &&
-        results &&
-        results.length > 0
-      ) {
-        const placeWithPhoto = results.find(
-          (place) => place.photos && place.photos.length > 0,
-        )
+    service.textSearch(
+      request,
+      (results: any[] | null, status: string) => {
+        if (
+          status === window.google.maps.places.PlacesServiceStatus.OK &&
+          results &&
+          results.length > 0
+        ) {
+          const placeWithPhoto = results.find(
+            (place: any) => place.photos && place.photos.length > 0,
+          )
 
-        if (placeWithPhoto?.photos?.[0]) {
-          const url = placeWithPhoto.photos[0].getUrl({
-            maxWidth: 1200,
-            maxHeight: 600,
-          })
-          resolve(url)
-          return
+          if (placeWithPhoto?.photos?.[0]) {
+            const url = placeWithPhoto.photos[0].getUrl({
+              maxWidth: 1200,
+              maxHeight: 600,
+            })
+            resolve(url)
+            return
+          }
         }
-      }
 
-      resolve(null)
-    })
+        resolve(null)
+      },
+    )
   })
 }
 
@@ -426,7 +437,7 @@ export default function EventDetailPage({
                 className={`absolute top-4 left-4 ${category.color} px-3 py-2 pixel-border-sm flex items-center gap-2 shadow-lg`}
               >
                 <span className="text-xl">
-                  {category.icon || category.emoji}
+                  {category.icon || category.emoji || '📌'}
                 </span>
                 <span className="font-pixel text-xs text-dark-brown">
                   {category.name}
