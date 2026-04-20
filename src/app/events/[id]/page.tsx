@@ -36,6 +36,12 @@ type DbEvent = {
   updatedAt?: string
 }
 
+type AuthUser = {
+  id: number
+  email: string
+  name?: string | null
+}
+
 function normalizeCategory(raw: string) {
   const value = raw.trim().toLowerCase()
 
@@ -151,6 +157,42 @@ export default function EventDetailPage({
   const [placeImageUrl, setPlaceImageUrl] = useState('')
   const [imageLoading, setImageLoading] = useState(false)
   const [imageFailed, setImageFailed] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null)
+  const [showPopup, setShowPopup] = useState(false)
+  const [popupMessage, setPopupMessage] = useState('')
+  const [popupNeedsLogin, setPopupNeedsLogin] = useState(false)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store',
+        })
+
+        if (!res.ok) {
+          setIsLoggedIn(false)
+          setCurrentUser(null)
+          return
+        }
+
+        const data = await res.json()
+        setIsLoggedIn(true)
+        setCurrentUser(data.user ?? null)
+      } catch (err) {
+        console.error('AUTH CHECK ERROR:', err)
+        setIsLoggedIn(false)
+        setCurrentUser(null)
+      } finally {
+        setCheckingAuth(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -231,6 +273,76 @@ export default function EventDetailPage({
       year: 'numeric',
     })
   }, [event])
+
+  const openPopup = (message: string, needsLogin = false) => {
+    setPopupMessage(message)
+    setPopupNeedsLogin(needsLogin)
+    setShowPopup(true)
+  }
+
+  const handleBookmark = async () => {
+    if (!event) return
+
+    try {
+      const res = await fetch('/api/auth/me', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+      })
+
+      if (!res.ok) {
+        setIsLoggedIn(false)
+        setCurrentUser(null)
+        openPopup('You need to log in first to bookmark events.', true)
+        return
+      }
+
+      const data = await res.json()
+      const user: AuthUser | null = data.user ?? null
+
+      if (!user?.id) {
+        setIsLoggedIn(false)
+        setCurrentUser(null)
+        openPopup('You need to log in first to bookmark events.', true)
+        return
+      }
+
+      setIsLoggedIn(true)
+      setCurrentUser(user)
+
+      const bookmarkKey = `bookmarkedEvents_user_${user.id}`
+      const saved = JSON.parse(localStorage.getItem(bookmarkKey) || '[]')
+
+      const alreadySaved = saved.some((item: DbEvent) => item.id === event.id)
+
+      if (!alreadySaved) {
+        saved.push(event)
+        localStorage.setItem(bookmarkKey, JSON.stringify(saved))
+        openPopup('Event bookmarked successfully!')
+      } else {
+        openPopup('Event already bookmarked!')
+      }
+    } catch (err) {
+      console.error('BOOKMARK ERROR:', err)
+      setIsLoggedIn(false)
+      setCurrentUser(null)
+      openPopup('You need to log in first to bookmark events.', true)
+    }
+  }
+
+  const handleShare = async () => {
+    if (!event) return
+
+    const eventLink = `${window.location.origin}/events/${event.id}`
+
+    try {
+      await navigator.clipboard.writeText(eventLink)
+      openPopup('Event link copied!')
+    } catch (err) {
+      console.error(err)
+      openPopup('Failed to copy event link.')
+    }
+  }
 
   if (isLoading) {
     return (
@@ -365,44 +477,26 @@ export default function EventDetailPage({
                 </div>
 
                 <button
-                  onClick={() => {
-                    const saved = JSON.parse(
-                      localStorage.getItem('bookmarkedEvents') || '[]',
-                    )
-
-                    const alreadySaved = saved.some(
-                      (item: DbEvent) => item.id === event.id,
-                    )
-
-                    if (!alreadySaved) {
-                      saved.push(event)
-                      localStorage.setItem(
-                        'bookmarkedEvents',
-                        JSON.stringify(saved),
-                      )
-                      alert('Event bookmarked!')
-                    } else {
-                      alert('Event already bookmarked!')
-                    }
-                  }}
-                  className="w-full bg-green hover:bg-dark-green text-cream py-3 font-pixel text-[10px] pixel-border-sm transition-colors flex items-center justify-center gap-2"
+                  onClick={handleBookmark}
+                  disabled={checkingAuth}
+                  className={`w-full py-3 font-pixel text-[10px] pixel-border-sm transition-colors flex items-center justify-center gap-2 ${
+                    checkingAuth
+                      ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                      : isLoggedIn
+                        ? 'bg-green hover:bg-dark-green text-cream'
+                        : 'bg-brown hover:bg-dark-brown text-cream'
+                  }`}
                 >
                   <Bookmark size={16} />
-                  Bookmark Event
+                  {checkingAuth
+                    ? 'Checking Login...'
+                    : isLoggedIn
+                      ? 'Bookmark Event'
+                      : 'Login to Bookmark'}
                 </button>
 
                 <button
-                  onClick={async () => {
-                    const eventLink = `${window.location.origin}/events/${event.id}`
-
-                    try {
-                      await navigator.clipboard.writeText(eventLink)
-                      alert('Event link copied!')
-                    } catch (err) {
-                      console.error(err)
-                      alert('Failed to copy event link.')
-                    }
-                  }}
+                  onClick={handleShare}
                   className="w-full flex justify-center items-center gap-2 bg-sky hover:bg-blue-400 text-dark-brown py-2 pixel-border-sm transition-colors"
                 >
                   <Share2 size={20} />
@@ -450,6 +544,41 @@ export default function EventDetailPage({
             </div>
           </div>
         </PixelBorder>
+
+        {showPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+            <div className="w-full max-w-md">
+              <PixelBorder className="bg-parchment p-6 text-center shadow-2xl">
+                <h2 className="font-pixel text-lg text-dark-brown mb-4">
+                  Notice
+                </h2>
+
+                <p className="text-brown font-medium mb-6">{popupMessage}</p>
+
+                <div className="flex items-center justify-center gap-3">
+                  {popupNeedsLogin && (
+                    <button
+                      onClick={() => {
+                        setShowPopup(false)
+                        router.push('/login')
+                      }}
+                      className="bg-green hover:bg-dark-green text-white px-5 py-2 font-pixel text-[10px] pixel-border-sm transition-colors"
+                    >
+                      Go to Login
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => setShowPopup(false)}
+                    className="bg-brown hover:bg-dark-brown text-white px-5 py-2 font-pixel text-[10px] pixel-border-sm transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </PixelBorder>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
