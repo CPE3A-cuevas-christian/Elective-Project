@@ -1,17 +1,101 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CalendarView } from '@/components/calendarview'
 import { PixelBorder } from '@/components/pixelborder'
 import { events } from '@/lib/events'
 import { categories } from '@/lib/categories'
 
+type CalendarEvent = {
+  id: number | string
+  title: string
+  date: string
+  time: string
+  location: string
+  city?: string
+  categoryId: string
+}
+
+type BookmarkedEvent = {
+  id: number
+  name?: string
+  title?: string
+  description?: string
+  category?: string
+  categoryId?: string
+  location?: string
+  date?: string
+  time?: string
+  city?: string
+}
+
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [bookmarkedEvents, setBookmarkedEvents] = useState<CalendarEvent[]>([])
   const router = useRouter()
 
-  const selectedEvents = events.filter((e) => {
+  useEffect(() => {
+    const loadBookmarkedEvents = () => {
+      try {
+        const stored = localStorage.getItem('bookmarkedEvents')
+        if (!stored) {
+          setBookmarkedEvents([])
+          return
+        }
+
+        const parsed: BookmarkedEvent[] = JSON.parse(stored)
+
+        const normalized: CalendarEvent[] = parsed.map((event) => {
+          const matchedCategory = categories.find(
+            (cat) =>
+              cat.id === event.categoryId ||
+              cat.name.toLowerCase() === (event.category || '').toLowerCase(),
+          )
+
+          return {
+            id: event.id,
+            title: event.name || event.title || 'Untitled Event',
+            date: event.date || '',
+            time: event.time || '',
+            location: event.location || 'No location provided',
+            city: event.city || '',
+            categoryId: matchedCategory?.id || categories[0]?.id || 'general',
+          }
+        })
+
+        setBookmarkedEvents(normalized)
+      } catch (error) {
+        console.error('Failed to load bookmarked events:', error)
+        setBookmarkedEvents([])
+      }
+    }
+
+    loadBookmarkedEvents()
+
+    const handleStorageChange = () => {
+      loadBookmarkedEvents()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
+
+  const allEvents = useMemo(() => {
+    const combined = [...events, ...bookmarkedEvents]
+
+    const uniqueEvents = combined.filter(
+      (event, index, self) =>
+        index === self.findIndex((e) => String(e.id) === String(event.id)),
+    )
+
+    return uniqueEvents
+  }, [bookmarkedEvents])
+
+  const selectedEvents = allEvents.filter((e) => {
     const eventDate = new Date(e.date)
     return (
       eventDate.getDate() === selectedDate.getDate() &&
@@ -42,7 +126,7 @@ export default function CalendarPage() {
           {/* Main Calendar Area */}
           <div className="flex-grow lg:w-2/3">
             <CalendarView
-              events={events}
+              events={allEvents}
               selectedDate={selectedDate}
               onDateSelect={setSelectedDate}
             />
@@ -79,6 +163,7 @@ export default function CalendarPage() {
                     const cat = categories.find(
                       (c) => c.id === event.categoryId,
                     )
+
                     return (
                       <div
                         key={event.id}
@@ -89,7 +174,7 @@ export default function CalendarPage() {
                           <span
                             className={`text-[8px] font-pixel px-1.5 py-0.5 text-white ${cat?.color || 'bg-brown'}`}
                           >
-                            {cat?.name}
+                            {cat?.name || 'Event'}
                           </span>
                           <span className="text-xs font-bold text-brown">
                             {event.time}
@@ -99,7 +184,8 @@ export default function CalendarPage() {
                           {event.title}
                         </h3>
                         <p className="text-xs text-brown truncate">
-                          {event.location}, {event.city}
+                          {event.location}
+                          {event.city ? `, ${event.city}` : ''}
                         </p>
                       </div>
                     )
@@ -111,9 +197,7 @@ export default function CalendarPage() {
                   <p className="font-medium">
                     No events scheduled for this day.
                   </p>
-                  <p className="text-sm mt-2">
-                    A perfect day to rest!
-                  </p>
+                  <p className="text-sm mt-2">A perfect day to rest!</p>
                 </div>
               )}
             </PixelBorder>
