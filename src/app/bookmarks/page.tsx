@@ -1,12 +1,10 @@
 'use client'
 
-import React, { useContext, useEffect, useMemo, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Calendar, MapPin } from 'lucide-react'
 import { AuthContext } from '@/context/authcontext'
-import { useBookmarks } from '@/context/bookmarkcontext'
-import { BookmarkButton } from '@/components/bookmarkbutton'
 import { categories } from '@/lib/categories'
 
 type DbEvent = {
@@ -57,11 +55,10 @@ function normalizeCategory(raw: string) {
 
 export default function BookmarksPage() {
   const { user, loading } = useContext(AuthContext)
-  const { bookmarkedIds } = useBookmarks()
   const router = useRouter()
-  const [events, setEvents] = useState<DbEvent[]>([])
+
+  const [bookmarkedEvents, setBookmarkedEvents] = useState<DbEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!loading && !user) {
@@ -71,44 +68,32 @@ export default function BookmarksPage() {
 
   useEffect(() => {
     if (!user) {
-      setEvents([])
+      setBookmarkedEvents([])
       setIsLoading(false)
       return
     }
 
-    const fetchEvents = async () => {
-      try {
-        setIsLoading(true)
-        setError('')
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem('bookmarkedEvents') || '[]',
+      ) as DbEvent[]
 
-        const res = await fetch('/api/events', {
-          method: 'GET',
-          credentials: 'include',
-        })
-        const data = await res.json()
-
-        if (!res.ok) {
-          setError(data.error || 'Failed to load bookmarked events.')
-          return
-        }
-
-        setEvents(data.events || [])
-      } catch {
-        setError('Failed to load bookmarked events.')
-      } finally {
-        setIsLoading(false)
-      }
+      setBookmarkedEvents(saved)
+    } catch (error) {
+      console.error('Failed to load bookmarked events:', error)
+      setBookmarkedEvents([])
+    } finally {
+      setIsLoading(false)
     }
-
-    fetchEvents()
   }, [user])
 
-  const bookmarkedEvents = useMemo(() => {
-    const savedIds = new Set(bookmarkedIds)
-    return events.filter((event) => savedIds.has(String(event.id)))
-  }, [bookmarkedIds, events])
+  const handleRemoveBookmark = (eventId: number) => {
+    const updated = bookmarkedEvents.filter((event) => event.id !== eventId)
+    setBookmarkedEvents(updated)
+    localStorage.setItem('bookmarkedEvents', JSON.stringify(updated))
+  }
 
-  if (loading || (!user && !error)) {
+  if (loading || (!user && isLoading)) {
     return <div className="min-h-screen bg-cream" />
   }
 
@@ -138,12 +123,6 @@ export default function BookmarksPage() {
           {bookmarkedEvents.length === 1 ? '' : 's'}
         </div>
 
-        {error && (
-          <div className="mb-6 bg-red-100 border-2 border-red-300 text-red-800 px-4 py-3">
-            {error}
-          </div>
-        )}
-
         {isLoading ? (
           <div className="py-20 text-center">
             <h2 className="font-pixel text-lg text-dark-brown mb-2">
@@ -158,7 +137,7 @@ export default function BookmarksPage() {
               No bookmarks yet
             </h2>
             <p className="text-brown mb-5">
-              Tap the heart on any event to save it here.
+              Bookmark an event and it will appear here.
             </p>
             <Link
               href="/events"
@@ -173,27 +152,32 @@ export default function BookmarksPage() {
               const category = normalizeCategory(event.category)
 
               return (
-                <Link
+                <article
                   key={event.id}
-                  href={`/events/${event.id}`}
-                  className="block"
+                  className="h-full bg-parchment border-2 border-brown p-5 hover:bg-white transition-colors"
                 >
-                  <article className="h-full bg-parchment border-2 border-brown p-5 hover:bg-white transition-colors">
-                    <div className="mb-4 flex items-start justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`${category.color} px-2 py-1 text-[10px] font-pixel text-white`}
-                        >
-                          {category.name}
-                        </span>
-                        <span className="text-[10px] font-pixel px-2 py-1 bg-sky text-dark-brown">
-                          by {event.organizerName}
-                        </span>
-                      </div>
-
-                      <BookmarkButton eventId={String(event.id)} size={20} />
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`${category.color} px-2 py-1 text-[10px] font-pixel text-white`}
+                      >
+                        {category.name}
+                      </span>
+                      <span className="text-[10px] font-pixel px-2 py-1 bg-sky text-dark-brown">
+                        by {event.organizerName}
+                      </span>
                     </div>
 
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveBookmark(event.id)}
+                      className="text-brown hover:text-red-600 font-pixel text-[10px] border-2 border-brown px-2 py-1 bg-white hover:bg-red-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <Link href={`/events/${event.id}`} className="block">
                     <h2 className="font-pixel text-sm text-dark-brown mb-3">
                       {event.name}
                     </h2>
@@ -213,8 +197,8 @@ export default function BookmarksPage() {
                         <span>{extractCityFromLocation(event.location)}</span>
                       </div>
                     </div>
-                  </article>
-                </Link>
+                  </Link>
+                </article>
               )
             })}
           </div>
