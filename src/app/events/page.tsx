@@ -79,9 +79,23 @@ function extractCityFromLocation(location: string) {
     .map((part) => part.trim())
     .filter(Boolean)
 
-  if (parts.length >= 3) {
-    return parts[parts.length - 3]
-  }
+  /*
+    Example:
+
+    "SM North EDSA, Quezon City, Metro Manila, Philippines"
+
+    parts:
+    [0] SM North EDSA
+    [1] Quezon City
+    [2] Metro Manila
+    [3] Philippines
+
+    You want:
+    after the second to the last comma = parts[length - 2]
+    before the last comma = same region/city filter target
+
+    so result = parts[length - 2]
+  */
 
   if (parts.length >= 2) {
     return parts[parts.length - 2]
