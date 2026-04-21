@@ -133,7 +133,7 @@ export function SearchBar({
             <option value="all">All Categories</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
-                {cat.emoji ? `${cat.emoji} ${cat.name}` : cat.name}
+                {cat.name}
               </option>
             ))}
           </select>
