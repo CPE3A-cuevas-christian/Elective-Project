@@ -112,9 +112,15 @@ function haversineDistanceKm(
 }
 
 async function loadGoogleMaps(): Promise<void> {
-  if (window.google?.maps?.Geocoder) return
+  if (
+    window.google?.maps?.Geocoder &&
+    window.google?.maps?.places?.PlacesService
+  ) {
+    return
+  }
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+
   if (!apiKey) {
     throw new Error('Missing NEXT_PUBLIC_GOOGLE_MAPS_API_KEY')
   }
@@ -124,25 +130,94 @@ async function loadGoogleMaps(): Promise<void> {
       GOOGLE_MAPS_SCRIPT_ID,
     ) as HTMLScriptElement | null
 
+    const waitForGoogleMaps = () => {
+      let attempts = 0
+      const maxAttempts = 50
+
+      const check = () => {
+        if (
+          window.google?.maps?.Geocoder &&
+          window.google?.maps?.places?.PlacesService
+        ) {
+          resolve()
+          return
+        }
+
+        attempts++
+
+        if (attempts >= maxAttempts) {
+          reject(new Error('Google Maps Places library failed to load'))
+          return
+        }
+
+        setTimeout(check, 200)
+      }
+
+      check()
+    }
+
     if (existingScript) {
-      existingScript.addEventListener('load', () => resolve(), { once: true })
-      existingScript.addEventListener(
-        'error',
-        () => reject(new Error('Failed to load Google Maps')),
-        { once: true },
-      )
+      waitForGoogleMaps()
       return
     }
 
     const script = document.createElement('script')
     script.id = GOOGLE_MAPS_SCRIPT_ID
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`
     script.async = true
     script.defer = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Failed to load Google Maps'))
+
+    script.onload = () => {
+      waitForGoogleMaps()
+    }
+
+    script.onerror = () => {
+      reject(new Error('Failed to load Google Maps'))
+    }
+
     document.head.appendChild(script)
   })
+}
+
+async function getPlacePhotoByAddress(address: string): Promise<string> {
+  try {
+    await loadGoogleMaps()
+
+    return await new Promise((resolve) => {
+      const container = document.createElement('div')
+      const service = new window.google.maps.places.PlacesService(container)
+
+      service.textSearch(
+        { query: address },
+        (results: any[] | null, status: string) => {
+          if (
+            status === window.google.maps.places.PlacesServiceStatus.OK &&
+            results &&
+            results.length > 0
+          ) {
+            const placeWithPhoto = results.find(
+              (place: any) => place.photos && place.photos.length > 0,
+            )
+
+            if (placeWithPhoto?.photos?.[0]) {
+              resolve(
+                placeWithPhoto.photos[0].getUrl({
+                  maxWidth: 900,
+                  maxHeight: 500,
+                }),
+              )
+              return
+            }
+          }
+
+          resolve('')
+        },
+      )
+    })
+  } catch (error) {
+    console.error('FAILED TO LOAD PLACE PHOTO:', error)
+    return ''
+  }
 }
 
 export default function HomePage() {
@@ -296,6 +371,39 @@ export default function HomePage() {
         return
       }
 
+      const initialEvents = [...events]
+        .sort(
+          (a, b) =>
+            new Date(a.date).getTime() - new Date(b.date).getTime(),
+        )
+        .slice(0, 3)
+
+      const initialCards: HomeEvent[] = initialEvents.map((event) => {
+        const normalized = normalizeCategory(event.category)
+
+        return {
+          ...event,
+          city: extractCityFromLocation(event.location),
+          categoryId: normalized.categoryId,
+          categoryName: normalized.categoryName,
+          distanceKm: null,
+          image: '',
+        }
+      })
+
+      setRecommendedEvents(initialCards)
+
+      const cardsWithPhotos = await Promise.all(
+        initialCards.map(async (event) => ({
+          ...event,
+          image: await getPlacePhotoByAddress(event.location),
+        })),
+      )
+
+      setRecommendedEvents(cardsWithPhotos)
+
+      if (!userCoords) return
+
       try {
         await loadGoogleMaps()
         const geocoder = new window.google.maps.Geocoder()
@@ -331,7 +439,7 @@ export default function HomePage() {
             const coords = await geocodeLocation(event.location)
 
             let distanceKm: number | null = null
-            if (coords && userCoords) {
+            if (coords) {
               distanceKm = haversineDistanceKm(
                 userCoords.lat,
                 userCoords.lng,
@@ -346,45 +454,28 @@ export default function HomePage() {
               categoryId: normalized.categoryId,
               categoryName: normalized.categoryName,
               distanceKm,
-              image: '/placeholder-event.png',
+              image: '',
             }
           }),
         )
 
-        const sorted = [...enriched].sort((a, b) => {
-          if (userCoords) {
-            return (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity)
-          }
-
-          const aDate = new Date(a.date).getTime()
-          const bDate = new Date(b.date).getTime()
-          return aDate - bDate
-        })
-
-        setRecommendedEvents(sorted.slice(0, 3))
-      } catch (err) {
-        console.error('FAILED TO BUILD RECOMMENDED EVENTS:', err)
-
-        const fallback = events
-          .map((event) => {
-            const normalized = normalizeCategory(event.category)
-
-            return {
-              ...event,
-              city: extractCityFromLocation(event.location),
-              categoryId: normalized.categoryId,
-              categoryName: normalized.categoryName,
-              distanceKm: null,
-              image: '/placeholder-event.png',
-            }
-          })
+        const nearest = [...enriched]
           .sort(
             (a, b) =>
-              new Date(a.date).getTime() - new Date(b.date).getTime(),
+              (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity),
           )
           .slice(0, 3)
 
-        setRecommendedEvents(fallback)
+        const nearestWithPhotos = await Promise.all(
+          nearest.map(async (event) => ({
+            ...event,
+            image: await getPlacePhotoByAddress(event.location),
+          })),
+        )
+
+        setRecommendedEvents(nearestWithPhotos)
+      } catch (err) {
+        console.error('FAILED TO BUILD RECOMMENDED EVENTS:', err)
       }
     }
 
@@ -394,8 +485,7 @@ export default function HomePage() {
   const upcomingBookmarkedEvents = useMemo(() => {
     return [...bookmarkedEvents]
       .sort(
-        (a, b) =>
-          new Date(a.date).getTime() - new Date(b.date).getTime(),
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
       )
       .slice(0, 6)
   }, [bookmarkedEvents])
@@ -563,12 +653,19 @@ export default function HomePage() {
                       interactive
                       className="bg-white hover:bg-cream p-4 h-full"
                     >
-                      <div className="w-full h-44 mb-4">
-                        <img
-                          src={event.image}
-                          alt={event.name}
-                          className="w-full h-full object-cover border-2 border-brown"
-                        />
+                      <div className="w-full h-44 mb-4 bg-parchment border-2 border-brown overflow-hidden flex items-center justify-center">
+                        {event.image ? (
+                          <img
+                            src={event.image}
+                            alt={event.name}
+                            loading="eager"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="text-brown text-sm font-bold">
+                            Loading image...
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 mb-3">
