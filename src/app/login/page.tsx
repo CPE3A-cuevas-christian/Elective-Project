@@ -1,6 +1,7 @@
-"use client"
+'use client'
 
 import React, { useState, useContext } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { PixelBorder } from '@/components/pixelborder'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -10,9 +11,12 @@ export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,6 +30,7 @@ export default function LoginPage() {
     e.preventDefault()
     setFormError(null)
     setSubmitting(true)
+
     try {
       if (isLogin) {
         const res = await login(email, password)
@@ -35,6 +40,42 @@ export default function LoginPage() {
           setFormError(res.error || 'Invalid credentials')
         }
       } else {
+        if (password.length < 8) {
+          setFormError('Password must be at least 8 characters long.')
+          setSubmitting(false)
+          return
+        }
+
+        if (!/[A-Z]/.test(password)) {
+          setFormError('Password must contain at least 1 uppercase letter.')
+          setSubmitting(false)
+          return
+        }
+
+        if (!/[a-z]/.test(password)) {
+          setFormError('Password must contain at least 1 lowercase letter.')
+          setSubmitting(false)
+          return
+        }
+
+        if (!/[0-9]/.test(password)) {
+          setFormError('Password must contain at least 1 number.')
+          setSubmitting(false)
+          return
+        }
+
+        if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+          setFormError('Password must contain at least 1 special character.')
+          setSubmitting(false)
+          return
+        }
+
+        if (password !== confirmPassword) {
+          setFormError('Passwords do not match.')
+          setSubmitting(false)
+          return
+        }
+
         const res = await register(name, email, password)
         if (res.ok) {
           router.push('/')
@@ -52,10 +93,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative Background Elements */}
-      <div className="absolute top-10 left-10 text-4xl opacity-20 select-none">🌲</div>
-      <div className="absolute bottom-10 right-10 text-4xl opacity-20 select-none">🌲</div>
-      <div className="absolute top-1/4 right-1/4 text-2xl opacity-30 select-none">✨</div>
-      <div className="absolute bottom-1/4 left-1/4 text-2xl opacity-30 select-none">🍂</div>
+      <div className="absolute top-10 left-10 text-4xl opacity-20 select-none">
+        🌲
+      </div>
+      <div className="absolute bottom-10 right-10 text-4xl opacity-20 select-none">
+        🌲
+      </div>
+      <div className="absolute top-1/4 right-1/4 text-2xl opacity-30 select-none">
+        ✨
+      </div>
+      <div className="absolute bottom-1/4 left-1/4 text-2xl opacity-30 select-none">
+        🍂
+      </div>
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
@@ -75,22 +124,25 @@ export default function LoginPage() {
             <button
               type="button"
               className={`flex-1 py-3 font-pixel text-[0.9rem] transition-colors ${
-                isLogin 
-                  ? 'bg-brown text-cream' 
-                  : 'text-brown hover:bg-cream'
+                isLogin ? 'bg-brown text-cream' : 'text-brown hover:bg-cream'
               }`}
-              onClick={() => setIsLogin(true)}
+              onClick={() => {
+                setIsLogin(true)
+                setFormError(null)
+                setConfirmPassword('')
+              }}
             >
               Login
             </button>
             <button
               type="button"
               className={`flex-1 py-3 font-pixel text-[0.9rem] transition-colors ${
-                !isLogin 
-                  ? 'bg-brown text-cream' 
-                  : 'text-brown hover:bg-cream'
+                !isLogin ? 'bg-brown text-cream' : 'text-brown hover:bg-cream'
               }`}
-              onClick={() => setIsLogin(false)}
+              onClick={() => {
+                setIsLogin(false)
+                setFormError(null)
+              }}
             >
               Sign Up
             </button>
@@ -102,6 +154,7 @@ export default function LoginPage() {
                 {formError}
               </div>
             )}
+
             {!isLogin && (
               <div>
                 <label className="block text-sm font-bold text-dark-brown mb-1">
@@ -136,23 +189,71 @@ export default function LoginPage() {
               <label className="block text-sm font-bold text-dark-brown mb-1">
                 Password
               </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 bg-white border-2 border-brown focus:outline-none focus:border-green"
-                placeholder="••••••••"
-              />
+
+              {!isLogin && (
+                <p className="text-[11px] text-brown mb-2">
+                  Must be at least 8 characters with uppercase, lowercase,
+                  number, and special character.
+                </p>
+              )}
+
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-3 pr-12 bg-white border-2 border-brown focus:outline-none focus:border-green"
+                  placeholder="••••••••"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-brown"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
+
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-bold text-dark-brown mb-1">
+                  Confirm Password
+                </label>
+
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full p-3 pr-12 bg-white border-2 border-brown focus:outline-none focus:border-green"
+                    placeholder="••••••••"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-brown"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {isLogin && (
               <div className="flex justify-between items-center text-sm">
                 <label className="flex items-center text--brown cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="mr-2 accent-green"
-                  />
+                  <input type="checkbox" className="mr-2 accent-green" />
                   Remember me
                 </label>
                 <Link
@@ -167,19 +268,30 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className={`w-full ${submitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-dark-green'} bg-green text-cream py-4 font-pixel text-sm pixel-border-sm transition-colors mt-6`}
+              className={`w-full ${
+                submitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-dark-green'
+              } bg-green text-cream py-4 font-pixel text-sm pixel-border-sm transition-colors mt-6`}
             >
-              {submitting ? (isLogin ? 'Signing in…' : 'Creating…') : (isLogin ? 'Login' : 'Create Account')}
+              {submitting
+                ? isLogin
+                  ? 'Signing in…'
+                  : 'Creating…'
+                : isLogin
+                  ? 'Login'
+                  : 'Create Account'}
             </button>
           </form>
         </PixelBorder>
 
         <p className="text-center mt-6">
-          <Link href="/" className="text-brown hover:text-green font-pixel text-[10px] flex items-center justify-center gap-2">
+          <Link
+            href="/"
+            className="text-brown hover:text-green font-pixel text-[10px] flex items-center justify-center gap-2"
+          >
             <span>←</span> Back to Home
           </Link>
         </p>
       </div>
     </div>
-  );
+  )
 }
