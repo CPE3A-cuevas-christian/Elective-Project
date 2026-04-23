@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   Search,
@@ -82,9 +82,11 @@ function FilterSelect({
         aria-expanded={isOpen}
       >
         <Icon size={18} className="text-brown flex-shrink-0" />
+
         <span className="min-w-0 flex-1 truncate font-bold text-brown">
           {selectedOption?.label ?? value}
         </span>
+
         <ChevronDown
           size={16}
           className={`flex-shrink-0 text-brown transition-transform ${
@@ -116,6 +118,7 @@ function FilterSelect({
                   aria-selected={isSelected}
                 >
                   <span className="truncate pr-3">{option.label}</span>
+
                   {isSelected && (
                     <span className="font-pixel text-[10px] uppercase tracking-wide">
                       Selected
@@ -230,6 +233,7 @@ export function SearchBar({
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.8fr)_0.95fr_0.95fr_0.95fr_0.7fr] gap-2">
         <div className="flex items-center border-2 border-brown bg-white px-4 py-3">
           <Search size={18} className="text-brown mr-3 flex-shrink-0" />
+
           <input
             type="text"
             value={query}
