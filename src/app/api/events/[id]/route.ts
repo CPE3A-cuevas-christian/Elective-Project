@@ -126,12 +126,14 @@ export async function DELETE(
 ) {
   try {
     const token = req.cookies.get('token')?.value
+    console.log('DELETE - Token exists:', !!token)
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const payload = verifyToken(token) as { id: number }
+    console.log('DELETE - Payload:', payload)
 
     if (!payload?.id) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
@@ -139,6 +141,7 @@ export async function DELETE(
 
     const resolvedParams = await params
     const eventId = Number(resolvedParams.id)
+    console.log('DELETE - Event ID:', eventId)
 
     if (Number.isNaN(eventId)) {
       return NextResponse.json(
@@ -150,6 +153,7 @@ export async function DELETE(
     const event = await prisma.event.findUnique({
       where: { id: eventId },
     })
+    console.log('DELETE - Found event:', event)
 
     if (!event) {
       return NextResponse.json(
@@ -158,6 +162,7 @@ export async function DELETE(
       )
     }
 
+    console.log('DELETE - Checking ownership:', event.organizerId, 'vs', payload.id)
     if (event.organizerId !== payload.id) {
       return NextResponse.json(
         { error: 'You can only delete your own events' },
@@ -165,9 +170,10 @@ export async function DELETE(
       )
     }
 
-    await prisma.event.delete({
+    const deletedEvent = await prisma.event.delete({
       where: { id: eventId },
     })
+    console.log('DELETE - Event deleted:', deletedEvent)
 
     return NextResponse.json({ message: 'Event deleted successfully' }, { status: 200 })
   } catch (error) {

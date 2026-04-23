@@ -167,22 +167,43 @@ export default function BookmarksPage() {
   }
 
   const handleDelete = async (eventId: number) => {
+    if (!user) return
+    
     setIsDeleting(true)
     try {
+      console.log('Attempting to delete event:', eventId)
       const response = await fetch(`/api/events/${eventId}`, {
         method: 'DELETE',
         credentials: 'include',
       })
 
+      console.log('Delete response status:', response.status)
+      const responseData = await response.json()
+      console.log('Delete response data:', responseData)
+
       if (response.ok) {
-        setCreatedEvents(createdEvents.filter((e) => e.id !== eventId))
+        // Remove from local state
+        setCreatedEvents(prevEvents => prevEvents.filter((e) => e.id !== eventId))
         setDeleteConfirm(null)
+        // Optionally re-fetch to ensure consistency
+        try {
+          const refetchResponse = await fetch('/api/events/my-events', {
+            credentials: 'include',
+          })
+          if (refetchResponse.ok) {
+            const data = await refetchResponse.json()
+            setCreatedEvents(data.events || [])
+          }
+        } catch (refetchError) {
+          console.warn('Failed to refetch events:', refetchError)
+        }
       } else {
-        alert('Failed to delete event')
+        console.error('Delete failed with status:', response.status)
+        alert(`Failed to delete event: ${responseData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error deleting event:', error)
-      alert('Error deleting event')
+      alert(`Error deleting event: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setIsDeleting(false)
     }
