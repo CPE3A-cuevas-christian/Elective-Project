@@ -5,7 +5,7 @@ const team = [
   {
     id: "1",
     name: "Belen",
-    role: "CARRY",
+    role: "Backend Developer",
     avatar: "./ganapics/hames.jpg",
     bio: "A hardworking and passionate computer engineer that continuously strives to improve technical skills and problemsolving abilities through consistent learning and hands-on practice.",
     github: "https://github.com/James-Laurence-Belen",
@@ -13,7 +13,7 @@ const team = [
   {
     id: "2",
     name: "Cuevas",
-    role: "JUNGLER",
+    role: "Frontend Developer",
     avatar: "./ganapics/cj.jpg",
     bio: "Designed and developed the UI/UX of GanapPH, focusing on user-friendly navigation, responsive layout, and modern visual design.",
     github: "https://github.com/CPE3A-cuevas-christian",
@@ -21,7 +21,7 @@ const team = [
   {
     id: "3",
     name: "Enriquez",
-    role: "OFF LANER",
+    role: "Backend Developer",
     avatar: "./ganapics/ryen.jpg",
     bio: "A dedicated Computer Engineering student focused on technical growth and adaptive problem-solving. Committed to mastering the stack through continuous learning and rigorous hands-on development.n",
     github: "https://github.com/CPE3A-enriquez-ryenuri",
@@ -29,7 +29,7 @@ const team = [
   {
     id: "4",
     name: "Deguzman",
-    role: "MID LANER",
+    role: "Database & API Developer",
     avatar: "./ganapics/dion.jpg",
     bio: "A dedicated Computer Engineering student aspiring to specialize in frontend development, consistently building hands-on projects and refining technical skills through continuous learning.",
     github: "https://github.com/CPE3A-deguzman-dionel",
@@ -37,7 +37,7 @@ const team = [
   {
     id: "5",
     name: "Ongleo",
-    role: "ROAM",
+    role: "Frontend Developer",
     avatar: "./ganapics/lei.jpg",
     bio: "An aspiring Computer Engineering specialist focused on frontend development. Dedicated to technical excellence through hands-on project building and a commitment to continuous learning.",
     github: "https://github.com/CPE3A-ongleo-johnlei",
@@ -115,18 +115,23 @@ export default function AboutPage() {
 
           <PixelBorder className="bg-white p-8">
             <h2 className="font-pixel text-lg text-gold mb-4">Tech Stack</h2>
-            <ul className="space-y-3 font-medium">
+            <div className="grid grid-cols-3 gap-4 font-medium">
               {[
-                "React & TypeScript",
-                "Next.js for framework",
-                "Tailwind CSS for styling",
-                
+                "React",
+                "Next.js",
+                "TypeScript",
+                "Tailwind CSS",
+                "PostgreSQL",
+                "Prisma ORM",
+                "JWT Auth",
+                "bcryptjs",
+                "Lucide Icons",
               ].map((item) => (
-                <li key={item} className="flex items-center gap-2">
+                <div key={item} className="flex items-center gap-2">
                   <span className="text-green">▶</span> {item}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
             <div className="mt-8 pt-6 border-t-2 border-brown">
               <p className="font-pixel text-[10px] text-light-brown leading-loose">
                 Class of 2026<br />Bulacan State University
