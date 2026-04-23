@@ -415,6 +415,7 @@ function EventsPageContent() {
           </h1>
 
           <SearchBar
+            key={`${query}::${cityParam || autoCity || 'All Locations'}::${category}::${sort}`}
             initialQuery={query}
             initialCity={cityParam || autoCity || 'All Locations'}
             initialCategory={category}

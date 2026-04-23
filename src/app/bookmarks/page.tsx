@@ -58,7 +58,6 @@ function normalizeCategory(raw: string) {
 export default function BookmarksPage() {
   const { user, loading } = useContext(AuthContext)
   const router = useRouter()
-
   const [bookmarkedEvents, setBookmarkedEvents] = useState<DbEvent[]>([])
   const [createdEvents, setCreatedEvents] = useState<DbEvent[]>([])
   const [isLoading, setIsLoading] = useState(true)
