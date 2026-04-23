@@ -36,7 +36,7 @@ const team = [
   },
   {
     id: "5",
-    name: "Ongleo",
+    name: "Ongleo, John Lei",
     role: "Frontend Developer",
     avatar: "./ganapics/lei.jpg",
     bio: "An aspiring Computer Engineering specialist focused on frontend development. Dedicated to technical excellence through hands-on project building and a commitment to continuous learning.",
