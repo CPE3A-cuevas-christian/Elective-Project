@@ -531,24 +531,24 @@ export default function HomePage() {
             Your next adventure awaits near you.
           </p>
 
-          <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-4 px-4">
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-3 sm:gap-4 px-2 sm:px-4">
             <Link
               href="/events"
-              className="w-full sm:w-auto flex items-center justify-center bg-green hover:bg-dark-green text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap"
+              className="w-full sm:w-auto flex items-center justify-center bg-green hover:bg-dark-green text-cream px-6 sm:px-8 py-3 sm:py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap"
             >
               Explore Events
             </Link>
 
             <Link
               href="/create_event"
-              className="w-full sm:w-auto flex items-center justify-center border-2 border-green text-green bg-transparent hover:bg-green/10 px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 whitespace-nowrap"
+              className="w-full sm:w-auto flex items-center justify-center border-2 border-green text-green bg-transparent hover:bg-green/10 px-6 sm:px-8 py-3 sm:py-4 font-pixel text-xs rounded-xl transition-all duration-300 whitespace-nowrap"
             >
               Create Event
             </Link>
 
             <Link
               href="/calendar"
-              className="w-full sm:w-auto flex items-center justify-center bg-brown hover:bg-dark-brown text-cream px-8 py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap"
+              className="w-full sm:w-auto flex items-center justify-center bg-brown hover:bg-dark-brown text-cream px-6 sm:px-8 py-3 sm:py-4 font-pixel text-xs rounded-xl transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap"
             >
               View Calendar
             </Link>
@@ -556,8 +556,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 -mt-8 relative z-20 mb-16">
-        <PixelBorder className="bg-parchment p-6 flex flex-col md:flex-row justify-around items-center gap-6">
+      <div className="max-w-5xl mx-auto px-2 sm:px-4 -mt-8 relative z-20 mb-16">
+        <PixelBorder className="bg-parchment p-4 sm:p-6 flex flex-col md:flex-row justify-around items-center gap-4 sm:gap-6">
           <div className="text-center">
             <div className="font-pixel text-xl text-dark-green text-ligher-shadow-pixel mb-2">
               {activeEventCount}
